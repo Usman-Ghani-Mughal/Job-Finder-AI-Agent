@@ -1,0 +1,9 @@
+Tailor the following CV to match the job description.
+
+CV:
+{cv_text}
+
+Job Description:
+{job_description}
+
+Return the revised resume.

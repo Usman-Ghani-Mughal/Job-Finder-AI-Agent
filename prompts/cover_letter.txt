@@ -1,0 +1,9 @@
+Write a formal and personalized cover letter for the following job:
+
+Job Description:
+{job_description}
+
+Candidate Resume:
+{cv_text}
+
+Start with "Dear Hiring Manager" and end with a professional signature.
