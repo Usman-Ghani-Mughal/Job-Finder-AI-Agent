@@ -1,24 +1,13 @@
-# agents.py
-import os
-# from langchain.llms import LlamaCpp
-from langchain.chains import LLMChain
-#from langchain.prompts import PromptTemplate
-from langchain.prompts import ChatPromptTemplate
-from langchain.chat_models import AzureChatOpenAI
-import utils as ut
-import prompts.prompts_template as prom
-from dotenv import load_dotenv
-load_dotenv()
 
 
-llm = AzureChatOpenAI(
-    openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-    temperature=0.5,
-    max_tokens=1000,
-)
+# llm = AzureChatOpenAI(
+#     openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+#     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+#     deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+#     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+#     temperature=0.5,
+#     max_tokens=1000,
+# )
 
 
 # # Load LLaMA model
@@ -47,21 +36,39 @@ def run_agents(**kwargs):
     elif "extract_cv_text" in kwargs and kwargs["cv_extension"] == "docx":
         cv_text = ut.extract_cv_text_from_docx(kwargs['extract_cv_text'])
     # check if function is call for requirment check
+    
     elif "is_requirements_meet" in kwargs:
         return ut.is_requirements_met(kwargs['cv_text'], kwargs['city'], kwargs['country'])
     # check if function is call for extract skills from csv
+    
     elif "extract_skills_from_csv_text" in kwargs:
         # TODO: Need to find way to shorten the text of CV so less number of token will use
-        cv_text = kwargs['cv_text'][:2000]
+        cv_text = kwargs['cv_text']
         # 1. Extract Skills    
         parse_prompt = ChatPromptTemplate.from_messages([
             ("system", prom.extract_skills_from_cv_text_prompt_system),
             ("human", prom.extract_skills_from_cv_text_prompt_human)
         ])
+        
+        gpt_4o_mini = AzureChatOpenAI(
+                openai_api_key=os.getenv("AZURE_OPENAI_KEY_GPT_4O_MINI"),
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_GPT_4O_MINI"),
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+                temperature=0.3) # type: ignore
     
-        parse_chain = LLMChain(llm=llm, prompt=parse_prompt)    
+        parse_chain = LLMChain(llm=gpt_4o_mini, prompt=parse_prompt)    
         skills = parse_chain.run({"cv_text": cv_text})
         return skills
+    elif "search_jobs" in kwargs:
+        """
+            1: Send Skills, City, country to API call function this will return jobs
+            2: Ask LLM to get top 5 Most relavent jobs
+            3: return the jobs to UI
+        """
+        # Find Jobs first
+        jobs = ut.get_jobs_adzuna(skills=kwargs['skills'], city=kwargs['city'], country=kwargs['country'])
+        return jobs
 
     # # 2. Find Job (Mock)
     # job_description = find_mock_job(skills, job_title, city, country)

@@ -76,14 +76,22 @@ if st.session_state.stage == "extract_skills":
     st.session_state.skills = run_agents(extract_skills_from_csv_text=True, cv_text = st.session_state.cv_text)
     st.session_state.stage = "search_matching_jobs"
     # TODO: I commented this because if i want to check if skills are extracting correct or not
-    # st.subheader("📄 Extracted skills")
-    # st.text_area("skills", st.session_state.skills, height=300)
+    st.subheader("📄 Extracted skills")
+    st.text_area("skills", st.session_state.skills, height=300)
     
 # === Stage 3: Fetch Matching Jobs ===
 if st.session_state.stage == "search_matching_jobs":
     with st.chat_message("assistant"):
         st.write("🔎 Finding top matching jobs for you...")
-        
+    # get matching jobs 
+    st.session_state.jobs = run_agents(search_jobs = True, 
+                                       skills=st.session_state.skills,
+                                       city=st.session_state.city,
+                                       country=st.session_state.country)
+    
+    st.subheader("📄 Extracted jobs")
+    st.text_area("jobs", st.session_state.jobs, height=300)
+    
     # with st.chat_message("assistant"):
     #     st.write("🔎 Finding top matching jobs for you...")
     # api_response = call_adzuna_api(st.session_state.city, st.session_state.country)
