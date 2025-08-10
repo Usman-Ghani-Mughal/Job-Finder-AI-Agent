@@ -43,7 +43,7 @@ if st.session_state.stage == "ask_inputs":
         # First we need to extract CV text
         file_name = uploaded_cv.name
         extension = extension = file_name.split(".")[-1].lower()
-        
+        cv_text = ""
         if extension == "pdf":
             # Extract text from PDF
             cv_text = run_agents(extract_cv_text = uploaded_cv, cv_extension = "pdf")
@@ -83,64 +83,47 @@ if st.session_state.stage == "extract_skills":
 if st.session_state.stage == "search_matching_jobs":
     with st.chat_message("assistant"):
         st.write("🔎 Finding top matching jobs for you...")
+        
     # get matching jobs 
     st.session_state.jobs = run_agents(search_jobs = True, 
                                        skills=st.session_state.skills,
                                        city=st.session_state.city,
                                        country=st.session_state.country)
     
-    st.subheader("📄 Extracted jobs")
-    st.text_area("jobs", st.session_state.jobs, height=300)
+    # st.subheader("📄 Extracted jobs")
+    # st.text_area("jobs", st.session_state.jobs, height=300)
     
-    # with st.chat_message("assistant"):
-    #     st.write("🔎 Finding top matching jobs for you...")
-    # api_response = call_adzuna_api(st.session_state.city, st.session_state.country)
-    # st.session_state.jobs = find_matching_jobs_agent(llm, st.session_state.skills, api_response)
+    st.subheader("💼 Matching Jobs")
+    
+    selected_job_id = None
 
-    # st.session_state.stage = "show_jobs"
+    for i, job in enumerate(st.session_state.jobs):
+        with st.expander(f"{job['title']} at {job['company']} ({job['job_location']})", expanded=False):
+            st.write(f"**Company:** {job['company']}")
+            st.write(f"**Location:** {job['job_location']}")
+            st.write(f"**Salary:** £{job['salary_min']} - £{job['salary_max']}")
+            st.write(f"**Description:**\n{job['description']}")
+            st.markdown(f"[View Job Posting]({job['job_url']})")
+            
+            # Radio button inside expander to select this job
+            if st.radio("Select this job?", ("No", "Yes"), key=f"select_job_{i}") == "Yes":
+                selected_job_id = job['job_id']
 
-# # === Stage 4: Show Top Jobs ===
-# if st.session_state.stage == "show_jobs":
-#     st.chat_message("assistant").markdown("Here are the **top 5 job matches** for your profile:")
-#     for idx, job in enumerate(st.session_state.jobs):
-#         with st.chat_message("assistant"):
-#             st.markdown(f"**{idx+1}. {job['title']} at {job['company']}**")
-#             st.markdown(f"📍 {job['location']}")
-#             st.markdown(f"📝 {job['description'][:250]}...")
-#             st.markdown(f"[🔗 Job Link]({job['url']})")
+    if selected_job_id is not None:
+        selected_job = next(job for job in st.session_state.jobs if job['job_id'] == selected_job_id)
+        st.session_state.selected_job = selected_job
+        st.session_state.stage = "genrate_cv_and_cover_letter_confirmation"
 
-#     st.session_state.stage = "select_job"
+if st.session_state.stage == "genrate_cv_and_cover_letter_confirmation":
+    st.subheader("Thanks for selecting the job now do you want to Generate tailored CV & Cover Letter ")
+    if st.button("Generate tailored CV & Cover Letter"):
+        st.session_state.stage = "generate_documents"
+        # st.experimental_rerun()
+    else:
+        st.info("Please select one job by choosing 'Yes' under the job you want to apply for.")
 
-# # === Stage 5: Ask to Pick a Job ===
-# if st.session_state.stage == "select_job":
-#     selected_index = st.chat_input("Type the number (1-5) of the job you want to tailor your CV for:")
-#     if selected_index and selected_index.strip().isdigit():
-#         selected_index = int(selected_index.strip()) - 1
-#         if 0 <= selected_index < len(st.session_state.jobs):
-#             st.session_state.selected_job = st.session_state.jobs[selected_index]
-#             st.session_state.stage = "tailor_cv"
+if st.session_state.stage == "generate_documents":
+    st.subheader("Here is your genrated document")
 
-# # === Stage 6: Tailor CV and Cover Letter ===
-# if st.session_state.stage == "tailor_cv":
-#     st.chat_message("assistant").write("🛠️ Tailoring your CV and creating a cover letter...")
-#     st.session_state.tailored_cv = tailor_cv_agent(llm, st.session_state.cv_text, st.session_state.selected_job)
-#     st.session_state.cover_letter = cover_letter_agent(llm, st.session_state.tailored_cv, st.session_state.selected_job)
-
-#     st.chat_message("assistant").markdown("✅ Here’s your **Tailored CV**:")
-#     st.chat_message("assistant").code(st.session_state.tailored_cv)
-
-#     st.chat_message("assistant").markdown("✉️ And your **Cover Letter**:")
-#     st.chat_message("assistant").code(st.session_state.cover_letter)
-
-#     st.session_state.stage = "final_confirm"
-
-# # === Stage 7: Final Confirmation ===
-# if st.session_state.stage == "final_confirm":
-#     user_reply = st.chat_input("Are you happy with the tailored CV and cover letter? (yes/no)")
-#     if user_reply:
-#         user_reply = user_reply.strip().lower()
-#         if "yes" in user_reply:
-#             st.chat_message("assistant").success("🚀 Awesome! Best of luck with your job application!")
-#             st.session_state.stage = "done"
-#         elif "no" in user_reply:
-#             st.chat_message("assistant").warning("Tell me what needs changing. I'll help fix it.")
+    # st.subheader("📄 Extracted jobs")
+    # st.text_area("jobs", st.session_state.jobs, height=300)

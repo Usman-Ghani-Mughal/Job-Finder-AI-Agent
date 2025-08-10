@@ -5,3 +5,4 @@ openai
 chromadb
 requests
 langchain-community
+pymupdf

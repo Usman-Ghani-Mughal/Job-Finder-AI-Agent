@@ -1,26 +1,5 @@
-
-
-# llm = AzureChatOpenAI(
-#     openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-#     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-#     deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-#     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-#     temperature=0.5,
-#     max_tokens=1000,
-# )
-
-
-# # Load LLaMA model
-# llm = LlamaCpp(
-#     model_path="./llama-models/llama-2-7b-chat.Q4_K_M.gguf",
-#     temperature=0.5,
-#     max_tokens=2048,
-#     context_size=2048,
-#     n_gpu_layers=20,
-#     n_batch=512,
-#     verbose=True,
-# )
-
+# IMPORTS
+import utils as ut
 
 
 def load_prompt(filename):
@@ -45,30 +24,19 @@ def run_agents(**kwargs):
         # TODO: Need to find way to shorten the text of CV so less number of token will use
         cv_text = kwargs['cv_text']
         # 1. Extract Skills    
-        parse_prompt = ChatPromptTemplate.from_messages([
-            ("system", prom.extract_skills_from_cv_text_prompt_system),
-            ("human", prom.extract_skills_from_cv_text_prompt_human)
-        ])
-        
-        gpt_4o_mini = AzureChatOpenAI(
-                openai_api_key=os.getenv("AZURE_OPENAI_KEY_GPT_4O_MINI"),
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_GPT_4O_MINI"),
-                api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-                temperature=0.3) # type: ignore
-    
-        parse_chain = LLMChain(llm=gpt_4o_mini, prompt=parse_prompt)    
-        skills = parse_chain.run({"cv_text": cv_text})
+        skills = ut.extract_skills_from_csv_text(cv_text)
         return skills
     elif "search_jobs" in kwargs:
-        """
-            1: Send Skills, City, country to API call function this will return jobs
-            2: Ask LLM to get top 5 Most relavent jobs
-            3: return the jobs to UI
-        """
         # Find Jobs first
         jobs = ut.get_jobs_adzuna(skills=kwargs['skills'], city=kwargs['city'], country=kwargs['country'])
-        return jobs
+        # Now extract most relevant jobs
+        most_relevant_jobs = ut.extract_most_relevant_jobs(skills=kwargs['skills'],
+                                                           city=kwargs['city'],
+                                                           country=kwargs['country'],
+                                                           jobs=jobs,
+                                                           n_relevant_jobs=5
+                                                           )
+        return most_relevant_jobs
 
     # # 2. Find Job (Mock)
     # job_description = find_mock_job(skills, job_title, city, country)
