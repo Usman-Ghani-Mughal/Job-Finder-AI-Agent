@@ -2,7 +2,9 @@
 import streamlit as st
 from agents import run_agents
 
+search_job = True
 st.set_page_config(page_title="Job Finder Assistant", page_icon="💼")
+
 
 # Session State Initialization
 if "stage" not in st.session_state:
@@ -22,7 +24,7 @@ if "selected_job" not in st.session_state:
 if "tailored_cv" not in st.session_state:
     st.session_state.tailored_cv = ""
 if "cover_letter" not in st.session_state:
-    st.session_state.cover_letter = ""
+    st.session_state.cover_letter = ""  
 
 # === Stage 1: Greet user ===
 if st.session_state.stage == "greet":
@@ -67,7 +69,7 @@ if st.session_state.stage == "ask_inputs":
             # TODO: I comment this becuase if i want to check if text from cv is been extracted or not
             # st.subheader("📄 Extracted CV Text")
             # st.text_area("CV Content", st.session_state.cv_text, height=300)
-            st.session_state.stage = "extract_skills"
+            st.session_state.stage = "extract_skills"   
 
 # === Stage 3: Extract Skills ===
 if st.session_state.stage == "extract_skills":
@@ -112,18 +114,31 @@ if st.session_state.stage == "search_matching_jobs":
     if selected_job_id is not None:
         selected_job = next(job for job in st.session_state.jobs if job['job_id'] == selected_job_id)
         st.session_state.selected_job = selected_job
-        st.session_state.stage = "genrate_cv_and_cover_letter_confirmation"
-
-if st.session_state.stage == "genrate_cv_and_cover_letter_confirmation":
-    st.subheader("Thanks for selecting the job now do you want to Generate tailored CV & Cover Letter ")
-    if st.button("Generate tailored CV & Cover Letter"):
         st.session_state.stage = "generate_documents"
-        # st.experimental_rerun()
-    else:
-        st.info("Please select one job by choosing 'Yes' under the job you want to apply for.")
 
+# Generate tailored CV & Cover Letter stage
 if st.session_state.stage == "generate_documents":
-    st.subheader("Here is your genrated document")
+    st.subheader("📄 Tailored CV & Cover Letter")
+    st.write("Here is your generated document...")
+    # st.write(st.session_state.selected_job)
+    
+    # Geenrate CV
+    # get matching jobs 
+    st.session_state.tailor_cv_cover_letter = run_agents(tailor_cv_cover_letter = True,
+                                       current_cv_text=st.session_state.cv_text,
+                                       selected_job=st.session_state.selected_job)
+    
+    st.subheader("Tailored CV")
+    st.write(st.session_state.tailor_cv_cover_letter['tailored_cv'])
+    st.subheader("Cover Letter")
+    st.write(st.session_state.tailor_cv_cover_letter['cover_letter'])
+    
+    
+    
 
-    # st.subheader("📄 Extracted jobs")
-    # st.text_area("jobs", st.session_state.jobs, height=300)
+        # st.subheader("📄 Extracted jobs")
+        # st.text_area("jobs", st.session_state.jobs, height=300)
+        
+        # st.session_state.cv_text = cv_text
+        # st.session_state.city = city
+        # st.session_state.country = country

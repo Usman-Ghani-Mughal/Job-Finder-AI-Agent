@@ -76,9 +76,8 @@ def get_jobs_adzuna(skills, city, country):
     if not skills or not city or not country:
         raise ValueError("Skills, city, and country are required.")
     
-    print('\033[36m' + "skills " + skills)
     encoded_query = urllib.parse.quote(skills)
-    
+        
     #encoded_city = urllib.parse.quote(city)
     encoded_country = urllib.parse.quote(country)
 
@@ -152,6 +151,53 @@ def extract_most_relevant_jobs(skills, city, country, jobs, n_relevant_jobs=5):
     jobs_list = ast.literal_eval(most_rel_jobs)
     
     return jobs_list
+
+
+def tailor_current_cv(cv_text, job_description):
+    
+    parse_prompt = ChatPromptTemplate.from_messages([
+        ("system", prom.tailor_cv_prompt_system),
+    (   "human", prom.tailor_cv_prompt_human)
+    ])
+
+    gpt_4o_mini = get_llm_model(
+            openai_api_key="gpt_4_o_mini_AZURE_OPENAI_KEY",
+            azure_endpoint="gpt_4_o_mini_AZURE_OPENAI_ENDPOINT",
+            deployment_name="gpt_4_o_mini_AZURE_OPENAI_DEPLOYMENT_NAME",
+            api_version="gpt_4_o_mini_AZURE_OPENAI_API_VERSION",
+            temperature=0.3
+        )
+        
+    parse_chain = LLMChain(llm=gpt_4o_mini, prompt=parse_prompt)    
+    tailored_cv = parse_chain.run({
+    "cv_text": cv_text,
+    "job_description": job_description
+    })
+    
+    return tailored_cv
+
+def generate_cover_letter(cv_text,job_description):
+    parse_prompt = ChatPromptTemplate.from_messages([
+    ("system", prom.cover_letter_prompt_system),
+    ("human", prom.cover_letter_prompt_human)
+    ])
+    
+    gpt_4o_mini = get_llm_model(
+            openai_api_key="gpt_4_o_mini_AZURE_OPENAI_KEY",
+            azure_endpoint="gpt_4_o_mini_AZURE_OPENAI_ENDPOINT",
+            deployment_name="gpt_4_o_mini_AZURE_OPENAI_DEPLOYMENT_NAME",
+            api_version="gpt_4_o_mini_AZURE_OPENAI_API_VERSION",
+            temperature=0.3
+        )
+    
+    parse_chain = LLMChain(llm=gpt_4o_mini, prompt=parse_prompt)    
+    cover_letter = parse_chain.run({
+    "cv_text": cv_text,
+    "job_description": job_description
+    })
+    
+    return cover_letter
+    
 
 def find_mock_job(skills, title, city, country):
     return f"""
