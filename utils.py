@@ -6,6 +6,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import AzureChatOpenAI
 import prompts.prompts_template as prom
+from docx import Document
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -56,7 +57,11 @@ def extract_cv_text_from_pdf(file):
     return text
 
 def extract_cv_text_from_docx(file):
-    pass
+    doc = Document(file)
+    full_text = []
+    for paragraph in doc.paragraphs:
+        full_text.append(paragraph.text)
+    return "\n".join(full_text)
 
 def is_requirements_met(cv_text: str, city: str, country: str) -> bool:
     return all([

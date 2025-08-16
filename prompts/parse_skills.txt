@@ -1,5 +1,0 @@
-Extract all technical and soft skills from this CV text:
-
-{cv_text}
-
-Only return a comma-separated list of skills.

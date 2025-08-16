@@ -14,6 +14,7 @@ def run_agents(**kwargs):
     # check if function is call for extract text from docs?
     elif "extract_cv_text" in kwargs and kwargs["cv_extension"] == "docx":
         cv_text = ut.extract_cv_text_from_docx(kwargs['extract_cv_text'])
+        return cv_text
     # check if function is call for requirment check
     
     elif "is_requirements_meet" in kwargs:
@@ -27,6 +28,9 @@ def run_agents(**kwargs):
         # TODO: **
         skills = ut.extract_skills_from_csv_text(cv_text)
         #skills = "Python Sql Data Enginering Airflow Pyspark Databricks ADF"
+        print("----------------------------------")
+        print("extract skills")
+        print("----------------------------------")
         return skills
     elif "search_jobs" in kwargs:
         # Find Jobs first
@@ -40,27 +44,9 @@ def run_agents(**kwargs):
                                                            jobs=jobs,
                                                            n_relevant_jobs=5
                                                            )
-        return most_relevant_jobs
-    elif "tailor_cv_cover_letter" in kwargs:
-        # tailor_cv_cover_letter, current_cv_text, selected_job
-        
-        tailored_cv = ut.tailor_current_cv(
-            cv_text=kwargs['current_cv_text'],
-            job_description=kwargs['selected_job'] 
-        )
-        cover_letter = ut.generate_cover_letter(
-            cv_text=kwargs['current_cv_text'],
-            job_description=kwargs['selected_job']
-        )
-        
-        cv_and_cover = {
-            "tailored_cv": tailored_cv,
-            "cover_letter": cover_letter
-        }
-        
-        return cv_and_cover
-        
-        
+        print("----------------------------------")
+        print("job search")
+        print("----------------------------------")
         # most_relevant_jobs = [
         #                         {
         #                             "job_id": 3,
@@ -133,34 +119,23 @@ def run_agents(**kwargs):
         #                             "location_longitude": None,
         #                         },
         #                     ]
+        
         return most_relevant_jobs
-
-    # # 2. Find Job (Mock)
-    # job_description = find_mock_job(skills, job_title, city, country)
-
-    # # 3. Tailor Resume
-    # # tailor_prompt = PromptTemplate.from_template(load_prompt("tailor_resume.txt"))
-    
-    # tailor_prompt = ChatPromptTemplate.from_messages([
-    # ("system", "You are a helpful assistant for resume optimization."),
-    # ("human", "Tailor the following CV to better fit this job description:\nCV:\n{cv_text}\nJob Description:\n{job_description}")
-    # ])
-    
-    # tailor_chain = LLMChain(llm=llm, prompt=tailor_prompt)
-    # tailored_resume = tailor_chain.run({"cv_text": cv_text, "job_description": job_description})
-
-    # # 4. Cover Letter
-    # # cover_prompt = PromptTemplate.from_template(load_prompt("cover_letter.txt")) 
-    # cover_prompt = ChatPromptTemplate.from_messages([
-    # ("system", "You are a professional career assistant."),
-    # ("human", "Generate a personalized cover letter for this job:\nJob:\n{job_description}\nResume:\n{cv_text}")
-    # ])
-    # cover_chain = LLMChain(llm=llm, prompt=cover_prompt)
-    # cover_letter = cover_chain.run({"cv_text": tailored_resume, "job_description": job_description})
-
-    # return {
-    #     "skills": skills,
-    #     "job_description": job_description,
-    #     "tailored_resume": tailored_resume,
-    #     "cover_letter": cover_letter
-    # }
+    elif "tailor_cv_cover_letter" in kwargs:
+        # tailor_cv_cover_letter, current_cv_text, selected_job
+        
+        tailored_cv = ut.tailor_current_cv(
+            cv_text=kwargs['current_cv_text'],
+            job_description=kwargs['selected_job'] 
+        )
+        cover_letter = ut.generate_cover_letter(
+            cv_text=kwargs['current_cv_text'],
+            job_description=kwargs['selected_job']
+        )
+        
+        cv_and_cover = {
+            "tailored_cv": tailored_cv,
+            "cover_letter": cover_letter
+        }
+        
+        return cv_and_cover

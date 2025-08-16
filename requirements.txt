@@ -6,3 +6,4 @@ chromadb
 requests
 langchain-community
 pymupdf
+python-docx
