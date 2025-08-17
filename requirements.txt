@@ -1,6 +1,5 @@
 streamlit
 langchain
-llama-cpp-python
 openai
 chromadb
 requests
