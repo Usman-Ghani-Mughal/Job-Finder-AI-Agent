@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 from agents import run_agents
+import random
 
 search_job = True
 st.set_page_config(page_title="Job Finder Assistant", page_icon="💼")
@@ -8,27 +9,45 @@ st.set_page_config(page_title="Job Finder Assistant", page_icon="💼")
 
 # Session State Initialization
 if "stage" not in st.session_state:
+    st.chat_message("assistant").write("👋 Hi! I'm your Job Finder Assistant.\n\nPlease upload your **CV**, and tell me your preferred **city** and **country** for the job search.")
     st.session_state.stage = "greet"
 
 # === Stage 1: Greet user ===
 if st.session_state.stage == "greet":
-    st.chat_message("assistant").write("👋 Hi! I'm your Job Finder Assistant.\n\nPlease upload your **CV**, and tell me your preferred **city** and **country** for the job search.")
     st.session_state.stage = "ask_inputs"
 
 # === Stage 2: Ask for inputs ===
 if st.session_state.stage == "ask_inputs":
     
     with st.chat_message("user"):
+        countries_cities = {
+            "United Kingdom": ["London", "Manchester", "Birmingham"],
+            "United States": ["New York", "Los Angeles", "Chicago"]
+        }
+
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            country = st.selectbox("Preferred Country", 
+                                 options=list(countries_cities.keys()),
+                                 index=None,
+                                 placeholder="Select a country")
+        with col2:
+            if country:
+                city_options = countries_cities[country]
+                city = st.selectbox("Preferred City", 
+                                  options=city_options,
+                                  index=None,
+                                  placeholder="Select a city")
+            else:
+                city = st.selectbox("Preferred City", 
+                                  options=[],
+                                  index=None,
+                                  placeholder="Select a country first",
+                                  disabled=True)
+                
         with st.form("cv_input_form"):
             uploaded_cv = st.file_uploader("Upload your CV (PDF or DOCX)", type=["pdf", "docx"])
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                 city = st.text_input("Preferred City")
-            with col2:
-                country = st.text_input("Preferred Country")
-            
-            # Submit button inside the form
             submitted = st.form_submit_button("Start Job Search")
             
             if submitted:
@@ -54,6 +73,11 @@ if st.session_state.stage == "ask_inputs":
                         st.session_state.cv_text = cv_text
                         st.session_state.city = city
                         st.session_state.country = country
+                        
+                        print("=============================")
+                        print(st.session_state.city)
+                        print(st.session_state.country)
+                        print("=============================")
 
                         # check if all requirement is meet or not
                         if not run_agents(is_requirements_meet=True, 
@@ -233,7 +257,7 @@ if st.session_state.stage == "search_matching_jobs":
                     font-weight: bold;
                     margin-top: 10px;
                 ">
-                    {85 - i*3}% Match
+                    {random.randint((85-i)-(i*2), (85+i)+(i*2)) - i*3}% Match
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -284,11 +308,6 @@ if st.session_state.stage == "search_matching_jobs":
     
     # Show summary
     st.info(f"🎯 Found {len(st.session_state.jobs)} highly relevant positions matching your skills and location preferences.")
-    
-
-# if st.session_state.stage == "search_matching_jobs_skiping":
-#     st.session_state.stage = "generate_documents"
-#     st.rerun()
 
 
 # Generate tailored CV & Cover Letter stage

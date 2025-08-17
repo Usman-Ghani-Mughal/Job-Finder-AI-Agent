@@ -81,20 +81,38 @@ def get_jobs_adzuna(skills, city, country):
     if not skills or not city or not country:
         raise ValueError("Skills, city, and country are required.")
     
-    encoded_query = urllib.parse.quote(skills)
+    country_maping = {
+        "United Kingdom": {"map_in_url": "gb", "map_in_param": "uk"},
+        "United States": {"map_in_url": "us",  "map_in_param": "us"},
+    }
+    city_mapping = {
+        "London": "London",
+        "Manchester": "North West England",
+        "Birmingham": "West Midlands",
         
-    #encoded_city = urllib.parse.quote(city)
-    encoded_country = urllib.parse.quote(country)
+        "New York": "New York",
+        "Los Angeles": "California",
+        "Chicago": "Illinois"
+    }
+    
+    country_url_str = country_maping[country]['map_in_url']
+    countr_parm_str = country_maping[country]['map_in_param']
+    city_parm_str = city_mapping[city]
+    
+    encoded_query = urllib.parse.quote(skills)
+    encoded_country = urllib.parse.quote(countr_parm_str)
+    encoded_city = urllib.parse.quote(city_parm_str)
 
 
     # Final API URL
     url = (
-        f"{ADZUNA_BASE_URL}/gb/search/1"
+        f"{ADZUNA_BASE_URL}/{country_url_str}/search/1"
         f"?app_id={os.getenv('ADZUNA_APP_ID')}"
         f"&app_key={os.getenv('ADZUNA_API_KEY')}" 
         f"&results_per_page={RESULT_PER_PAGE}"
         f"&what_or={encoded_query}"
-        f"&location0={encoded_country}")
+        f"&location0={encoded_country}"
+        f"&location1={encoded_city}")
     
     
     print('\033[36m' + "url " + url)
@@ -202,11 +220,3 @@ def generate_cover_letter(cv_text,job_description):
     })
     
     return cover_letter
-    
-
-def find_mock_job(skills, title, city, country):
-    return f"""
-    Job Title: {title}
-    Location: {city}, {country}
-    Description: We're hiring a {title} with experience in {skills}.
-    """
